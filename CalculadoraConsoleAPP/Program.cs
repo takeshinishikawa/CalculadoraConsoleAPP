@@ -32,20 +32,26 @@ namespace Calculadora
 
             while (true)
             {
+            Login:
                 while (true) //Login
                 {
-
-                    if (SolicitarCNPJ(ref inputCNPJ, "") == 1)
+                    int status = SolicitarCNPJ(ref inputCNPJ, "");
+                    if (status == -2 || status == -3 || status == -5)
+                        continue;
+                    else if (status == -4)
                         return;
                     numeroCNPJ = NumeroCNPJ(inputCNPJ);
-                    int status = VerificarCadastro(numeroCNPJ, ref empresaCNPJs, ref nomeEmpresa, ref index);
+                    status = VerificarCadastro(numeroCNPJ, ref empresaCNPJs, ref nomeEmpresa, ref index);
                     if (status == 0)
                         break;
                     else if (status == -2 || status == -3)
                         continue;
+                    else if (status == -4)
+                        return;
                 }
                 while (true) //Menu inicial
                 {
+                MenuInicial:
                     MenuInicial();
                     int opcaoEscolhida;
                     opcaoEscolhida = Check_input(Console.ReadLine());
@@ -54,38 +60,76 @@ namespace Calculadora
                         Console.WriteLine("Opção inválida. Por favor, escolha uma das opções abaixo:");
                         continue;
                     }
-                    else if (opcaoEscolhida == -2 || opcaoEscolhida == -5)
-                        break;
-                    else if (opcaoEscolhida == -3)
+
+                    else if (opcaoEscolhida == -2 || opcaoEscolhida == -3)
                         continue;
                     else if (opcaoEscolhida == -4)
                         return;
+                    else if (opcaoEscolhida == -5)
+                    {
+                        Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                        Console.WriteLine("========================================================");
+                        goto Login;
+                    }
                     else if (opcaoEscolhida == 1) //Cadastro de nota para o mês vigente
                     {
+                    SolicitarCNPJCliente1:
                         int status = SolicitarCNPJ(ref inputCNPJ, "cliente"); //Solicita CNPJ do Cliente
-                        if (status == -2)
-                            break;
-                        else if (status == -3)
+                        if (status == -2 || status == -3)
                             continue;
                         else if (status == -4)
                             return;
+                        else if (status == -5)
+                        {
+                            Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                            Console.WriteLine("========================================================");
+                            goto Login;
+                        }
                         numeroCNPJCliente = NumeroCNPJ(inputCNPJ);
                         status = VerificarCadastro(numeroCNPJCliente, ref cadastroClienteCNPJ, ref cadastroNomeCliente, ref cadastroIndexCliente); //Solicita nome do cliente caso não esteja cadastrado
                         if (status == -2)
-                            break;
+                            goto MenuInicial;
                         else if (status == -3)
-                            continue;
+                            goto SolicitarCNPJCliente1;
                         else if (status == -4)
                             return;
+                        else if (status == -5)
+                        {
+                            Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                            Console.WriteLine("========================================================");
+                            goto Login;
+                        }
                         else if (status == 0)
                         {
                             int answerStatus = -1;
                             EmitirNota(ref answerStatus); //Verifica se o usuário deseja emitir NF
                             if (answerStatus == -2)
-                                break;
+                                goto MenuInicial;
+                            else if (answerStatus == -3)
+                                goto SolicitarCNPJCliente1;
+                            else if (answerStatus == -4)
+                                return;
+                            else if (status == -5)
+                            {
+                                Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                                Console.WriteLine("========================================================");
+                                goto Login;
+                            }
                             else if (answerStatus == 0)
                             {
-                                RegistrarNota(ref nfValor, ref nfMes, ref nfAno, ref nfNome, ref nfOrigemCNPJ, numeroCNPJ, ref nfClienteCNPJ, cadastroClienteCNPJ, cadastroNomeCliente, cadastroIndexCliente, 0); //Registra a NF na base
+                                status = RegistrarNota(ref nfValor, ref nfMes, ref nfAno, ref nfNome, ref nfOrigemCNPJ, numeroCNPJ, ref nfClienteCNPJ, cadastroClienteCNPJ, cadastroNomeCliente, cadastroIndexCliente, 0); //Registra a NF na base
+                                if (status == -2)
+                                    goto MenuInicial;
+                                else if (status == -3)
+                                    goto SolicitarCNPJCliente1;
+                                else if (status == -4)
+                                    return;
+                                else if (status == -5)
+                                {
+                                    Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                                    Console.WriteLine("========================================================");
+                                    goto Login;
+                                }
                                 continue;
                             }
                             else
@@ -94,25 +138,38 @@ namespace Calculadora
                     }
                     else if (opcaoEscolhida == 2) //Registra NF para meses passados (apenas durante o ano vigente)
                     {
+                    SolicitarCNPJCliente2:
                         int status = SolicitarCNPJ(ref inputCNPJ, "cliente");
-                        if (status == -2)
-                            break;
-                        else if (status == -3)
-                            continue;
+                        if (status == -2 || status == -3)
+                            goto MenuInicial;
                         else if (status == -4)
                             return;
+                        else if (status == -5)
+                        {
+                            Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                            Console.WriteLine("========================================================");
+                            goto Login;
+                        }
                         numeroCNPJCliente = NumeroCNPJ(inputCNPJ);
                         status = VerificarCadastro(numeroCNPJCliente, ref cadastroClienteCNPJ, ref cadastroNomeCliente, ref cadastroIndexCliente); //Solicita nome do cliente caso não esteja cadastrado
                         if (status == -2)
-                            break;
+                            goto MenuInicial;
                         else if (status == -3)
-                            continue;
+                            goto SolicitarCNPJCliente2;
                         else if (status == -4)
                             return;
+                        else if (status == -5)
+                        {
+                            Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                            Console.WriteLine("========================================================");
+                            goto Login;
+                        }
                         int mesEscolhido;
                         Console.WriteLine();
+                        SolicitarMesEmissao:
                         while (true)
                         {
+                            Console.WriteLine("========================================================");
                             MenuPadrao();
                             Console.Write("Informe o mês da emissão (01 à 12): ");
                             mesEscolhido = Checar_mes(Console.ReadLine().ToUpper()); //Verifica se o usuárioinformou um mês anterior ao corrente
@@ -121,19 +178,38 @@ namespace Calculadora
                                 Console.WriteLine("Por favor, escolha uma das opções abaixo:");
                                 continue;
                             }
+                            if (mesEscolhido == -2)
+                                goto SolicitarCNPJCliente2;
                             else if (mesEscolhido == -3)
-                                continue;
+                                goto SolicitarMesEmissao;
                             else if (mesEscolhido == -4)
                                 return;
+                            else if (mesEscolhido == -5)
+                            {
+                                Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                                Console.WriteLine("========================================================");
+                                goto Login;
+                            }
                             else
                                 break;
                         }
-                        if (mesEscolhido == -2)
-                            break;
-                        RegistrarNota(ref nfValor, ref nfMes, ref nfAno, ref nfNome, ref nfOrigemCNPJ, numeroCNPJ, ref nfClienteCNPJ, cadastroClienteCNPJ, cadastroNomeCliente, cadastroIndexCliente, mesEscolhido); //Registra a NF na base
+                        status = RegistrarNota(ref nfValor, ref nfMes, ref nfAno, ref nfNome, ref nfOrigemCNPJ, numeroCNPJ, ref nfClienteCNPJ, cadastroClienteCNPJ, cadastroNomeCliente, cadastroIndexCliente, mesEscolhido); //Registra a NF na base
+                        if (status == -2)
+                            goto SolicitarCNPJCliente2;
+                        else if (status == -3)
+                            goto SolicitarMesEmissao;
+                        else if (status == -4)
+                            return;
+                        else if (status == -5)
+                        {
+                            Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                            Console.WriteLine("========================================================");
+                            goto Login;
+                        }
                     }
                     else if (opcaoEscolhida == 3)
                     {
+                    ConsultarNFs:
                         int answerStatus;
                         while (true)
                         {
@@ -148,22 +224,39 @@ namespace Calculadora
                                 Console.WriteLine("Por favor, escolha uma das opções abaixo:");
                                 continue;
                             }
-                            else if (answerStatus == -2 || answerStatus == 1 || answerStatus == 2)
-                                break;
-                            else if (answerStatus == -3)
-                                continue;
+                            else if (answerStatus == -2 || answerStatus == -3)
+                                goto MenuInicial;
                             else if (answerStatus == -4)
                                 return;
+                            else if (answerStatus == -5)
+                            {
+                                Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                                Console.WriteLine("========================================================");
+                                goto Login;
+                            }
                             else
-                                continue;
+                                break;
                         }
-                        if (answerStatus == -2)
-                            break;
-                        else if (answerStatus == 1) //Busca NFs do CNPJ solicitado && emitidas pelo CNPJ logado
+                        if (answerStatus == 1) //Busca NFs do CNPJ solicitado && emitidas pelo CNPJ logado
                         {
+                        SolicitarCNPJ:
                             Console.WriteLine();
                             Console.WriteLine("========================================================");
-                            SolicitarCNPJ(ref inputCNPJ, "cliente");
+                            int status = SolicitarCNPJ(ref inputCNPJ, "cliente");
+                            if (status == -1)
+                                goto SolicitarCNPJ;
+                            else if (status == -2)
+                                goto MenuInicial;
+                            else if (status == -3)
+                                goto ConsultarNFs;
+                            else if (status == -4)
+                                return;
+                            else if (status == -5)
+                            {
+                                Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                                Console.WriteLine("========================================================");
+                                goto Login;
+                            }
                             Console.WriteLine();
                             numeroCNPJCliente = NumeroCNPJ(inputCNPJ);
                             bool cabecalho = false;
@@ -207,7 +300,6 @@ namespace Calculadora
                             Console.WriteLine("========================================================");
                             string inputMes;
                             int mesStatus;
-
                             while (true)
                             {
                                 MenuPadrao();
@@ -220,11 +312,17 @@ namespace Calculadora
                                     continue;
                                 }
                                 else if (mesStatus == -2)
-                                    break;
+                                    goto MenuInicial;
                                 else if (mesStatus == -3)
-                                    continue;
+                                    goto ConsultarNFs;
                                 else if (mesStatus == -4)
                                     return;
+                                else if (mesStatus == -5)
+                                {
+                                    Console.WriteLine($"Conta do CNPJ {numeroCNPJ.ToString(@"00\.000\.000\/0000\-00")} deslogado.");
+                                    Console.WriteLine("========================================================");
+                                    goto Login;
+                                }
                                 else
                                     break;
                             }
@@ -283,35 +381,55 @@ namespace Calculadora
         {
             while (true)
             {
+                Console.WriteLine("========================================================"); 
                 MenuPadrao();
                 Console.Write("Deseja emitir nota? Sim/Nao: ");
                 answerStatus = Check_yes_no(Console.ReadLine().ToUpper());
                 if (answerStatus == -1)
                     Console.WriteLine("Por favor, digite uma resposta válida.");
-                else if (answerStatus == -2)
-                    break;
                 else if (answerStatus == -3)
                     continue;
-                else if (answerStatus == -4)
+                else if (answerStatus == -2 || answerStatus == -4 || answerStatus == -5)
                     return;
                 else
                     break;
             }
         }
 
-        static void RegistrarNota(ref double[] nfValor, ref string[] nfMes, ref string[] nfAno, ref string[] nfNome, ref long[] nfOrigemCNPJ, long numeroCNPJ,
+        static int RegistrarNota(ref double[] nfValor, ref string[] nfMes, ref string[] nfAno, ref string[] nfNome, ref long[] nfOrigemCNPJ, long numeroCNPJ,
             ref long[] nfClienteCNPJ, long[] cadastroClienteCNPJ, string[] cadastroNomeCliente, int cadastroIndexCliente, int mesEscolhido)
         {
             int nfIndex = 0;
             while (nfValor[nfIndex] != 0)
                 nfIndex++;
+            SolicitarValorNF:
             Console.Write("Informe o valor da Nota Fiscal: R$ ");
-            nfValor[nfIndex] = ConvertToDouble(Console.ReadLine());
+            string input = Console.ReadLine().ToUpper();
+            if (input.ToUpper() == "CANCELAR")
+                return -2;
+            else if (input.ToUpper() == "VOLTAR")
+                return -3;
+            else if (input.ToUpper() == "ENCERRAR")
+                return -4;
+            else if (input.ToUpper() == "SAIR")
+                return -5;
+            else
+                nfValor[nfIndex] = ConvertToDouble(input);
             while (nfValor[nfIndex] <= 0)
             {
                 Console.WriteLine("Valor inválido.");
                 Console.Write("Informe o valor da Nota Fiscal: R$ ");
-                nfValor[nfIndex] = ConvertToDouble(Console.ReadLine());
+                input = Console.ReadLine().ToUpper();
+                if (input.ToUpper() == "CANCELAR")
+                    return -2;
+                else if (input.ToUpper() == "VOLTAR")
+                    return -3;
+                else if (input.ToUpper() == "ENCERRAR")
+                    return -4;
+                else if (input.ToUpper() == "SAIR")
+                    return -5;
+                else
+                    nfValor[nfIndex] = ConvertToDouble(input);
             }
             if (mesEscolhido == 0)
             {
@@ -326,8 +444,13 @@ namespace Calculadora
             nfOrigemCNPJ[nfIndex] = numeroCNPJ;
             nfClienteCNPJ[nfIndex] = cadastroClienteCNPJ[cadastroIndexCliente];
             nfNome[nfIndex] = GetNomeCliente(nfClienteCNPJ[nfIndex], cadastroClienteCNPJ, cadastroNomeCliente);
-            CalcularImposto(nfValor[nfIndex]);
+            int status = CalcularImposto(nfValor[nfIndex]);
+            if (status == -3)
+                goto SolicitarValorNF;
+            else if (status == -2 || status == -1 || status == -5)
+                return status;
             Console.ReadLine();
+            return status;
         }
 
         static void MenuInicial()
@@ -338,7 +461,6 @@ namespace Calculadora
             Console.WriteLine("2 - Cadastrar notas anteriores");
             Console.WriteLine("3 - Consultar notas anteriores");
             MenuPadrao();
-            Console.WriteLine("SAIR - Deslogar usuário atual");
             Console.WriteLine();
             Console.WriteLine("========================================================");
             Console.Write("Opção escolhida: ");
@@ -349,9 +471,10 @@ namespace Calculadora
             Console.WriteLine("Cancelar - Voltar para o menu anterior");
             Console.WriteLine("Voltar - Voltar apenas um passo");
             Console.WriteLine("Encerrar - Finalizar o programa");
+            Console.WriteLine("SAIR - Deslogar usuário atual");
         }
 
-        static void CalcularImposto(double valorNF)
+        static int CalcularImposto(double valorNF)
         {
             double RBT12;
             while (true)
@@ -360,13 +483,18 @@ namespace Calculadora
                 Console.WriteLine("Por favor, informe o valor do seu faturamento nos últimos 12 meses.");
                 Console.WriteLine("Serão aceitos somente valores entre R$ 0,01 à R$ 4.800.000,00.");
                 Console.Write("Faturamento nos últimos 12 meses: R$ ");
-                RBT12 = ConvertToDouble(Console.ReadLine());
+                string input = Console.ReadLine().ToUpper();
+                if (input.ToUpper() == "CANCELAR")
+                    return -2;
+                else if (input.ToUpper() == "VOLTAR")
+                    return -3;
+                else if (input.ToUpper() == "ENCERRAR")
+                    return -4;
+                else if (input.ToUpper() == "SAIR")
+                    return -5;
+                RBT12 = ConvertToDouble(input);
                 Console.WriteLine();
-                if (RBT12 == -2)
-                    continue;
-                else if (RBT12 == -3)
-                    return;
-                else if (RBT12 == -1 || RBT12 < 0.01 || RBT12 > 4800000)
+                if (RBT12 == -1 || RBT12 < 0.01 || RBT12 > 4800000)
                     Console.WriteLine("Por favor, digite um valor de faturamento que esteja dentro dos limites descritos acima.");
                 else
                     break;
@@ -440,7 +568,7 @@ namespace Calculadora
                     break;
                 }
             }
-
+            return 0;
         }
         static string GetNomeCliente(long nfClienteCNPJ, long[] cadastroClienteCNPJ, string[] cadastroNomeCliente)
         {
@@ -463,7 +591,8 @@ namespace Calculadora
                 return -3;
             else if (value.ToUpper() == "ENCERRAR")
                 return -4;
-
+            else if (value.ToUpper() == "SAIR")
+                return -5;
 
             int mesAtual = Convert.ToInt32(DateTime.Now.ToString("MM"));
             int valueMes = Check_input(value);
@@ -487,6 +616,10 @@ namespace Calculadora
                 return -2;
             else if (value.ToUpper() == "VOLTAR")
                 return -3;
+            else if (value.ToUpper() == "ENCERRAR")
+                return -4;
+            else if (value.ToUpper() == "SAIR")
+                return -5;
             else if (value.ToUpper() == "SIM")
                 return 0;
             else if (value.ToUpper() == "NAO")
@@ -524,13 +657,15 @@ namespace Calculadora
         #region solicitar CNPJ usuario e cliente
         static int SolicitarCNPJ(ref string inputCNPJ, string proprietario)
         {
+            Console.WriteLine("========================================================");
+            MenuPadrao();
             if (proprietario == "cliente")
                 Console.Write("Digite o CNPJ do cliente: ");
             else
                 Console.Write("Digite seu CNPJ: ");
             while (true)
             {
-                inputCNPJ = Console.ReadLine();
+                inputCNPJ = Console.ReadLine().ToUpper();
                 if (inputCNPJ == null)
                     continue;
                 if (inputCNPJ.ToUpper() == "CANCELAR")
@@ -539,6 +674,8 @@ namespace Calculadora
                     return -3;
                 else if (inputCNPJ.ToUpper() == "ENCERRAR")
                     return -4;
+                else if (inputCNPJ.ToUpper() == "SAIR")
+                    return -5;
                 bool isValid = ValidaCNPJ(inputCNPJ);
                 if (isValid)
                     break;
@@ -547,7 +684,6 @@ namespace Calculadora
                     Console.WriteLine("Digite o CNPJ do cliente (Somente números): ");
                 else
                     Console.WriteLine("Digite seu CNPJ (Somente números)");
-
             }
             return 0;
         }
@@ -573,6 +709,7 @@ namespace Calculadora
                 index++;
             }
             empresaCNPJs[index] = numeroCNPJ;
+            Console.WriteLine("========================================================");
             MenuPadrao();
             Console.WriteLine("Qual o nome da empresa?");
             Console.Write("Digite o nome da empresa ou uma das opções: ");
@@ -588,6 +725,16 @@ namespace Calculadora
                 {
                     empresaCNPJs[index] = 0;
                     return -3;
+                }
+                else if (inputNomeDaEmpresa == "ENCERRAR")
+                {
+                    empresaCNPJs[index] = 0;
+                    return -4;
+                }
+                else if (inputNomeDaEmpresa == "SAIR")
+                {
+                    empresaCNPJs[index] = 0;
+                    return -5;
                 }
                 else if (inputNomeDaEmpresa.Length < 10)
                 {
@@ -657,6 +804,8 @@ namespace Calculadora
                 return -3;
             else if (value.ToUpper() == "ENCERRAR")
                 return -4;
+            else if (value.ToUpper() == "SAIR")
+                return -5;
             try
             {
                 long result = Convert.ToInt64(value);
@@ -681,6 +830,8 @@ namespace Calculadora
                 return -3;
             else if (value.ToUpper() == "ENCERRAR")
                 return -4;
+            else if (value.ToUpper() == "SAIR")
+                return -5;
             try
             {
                 double result = Convert.ToDouble(value);
